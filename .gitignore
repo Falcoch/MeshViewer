@@ -1,0 +1,16 @@
+.vscode/**
+.git/**
+
+build/**
+inc/**
+lib/**
+vcpkg_installed/**
+
+*.dll
+*.so
+*.obj
+*.a
+*.exe
+*.pdb
+
+imgui.ini
