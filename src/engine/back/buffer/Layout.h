@@ -3,7 +3,7 @@
 #include <utils/Type.h>
 #include <vector>
 
-namespace mv::engine::Layout
+namespace mv::engine::layout
 {
     enum  Value
     {
@@ -34,4 +34,15 @@ namespace mv::engine::Layout
 
         return total;
     }
+}
+
+namespace mv::engine::layout::defaults
+{
+    enum Weight
+    {
+        XYZ = 3,
+        RGB = 3,
+        UV  = 2,
+        NOM = 3
+    };
 }

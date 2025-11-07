@@ -8,56 +8,46 @@
 
 #include "Source.h"
 
-namespace mv::engine 
+#define MV_PROGRAM_DEFAULT_ID 0
+
+namespace mv::engine::shader 
 {
-    class Program {
-        protected:
-            enum Type 
-            {
-                NONE            = 0,
-                VERTEX          = 1,
-                FRAGMENT        = 2,
-                GEOMETRY        = 4,
-                TESS_CONTROL    = 8,
-                TESS_EVALUATION = 16,
-                COMPUTE         = 32,
-            }; 
-
-            static const uint8_t Categorie(const Source::Type);
-
+    class Program 
+    {
         public:
             Program();
             Program(const Program &) = delete;
-            Program(const Program &&) = delete;
-            Program operator=(const Program &) = delete;
+            Program(Program &&);
+            Program & operator=(const Program &) = delete;
+            Program & operator=(Program &&);
    virtual ~Program();
+
+            GLuint identifier() const;
+
+            bool linkable() const;
+            bool usable() const;
+
+            bool isCompute() const;
 
             void attach(const Source &);
             void dettach(const Source &);
             void release();
 
-            void link();
-
+            virtual void link() const;
             virtual void use() const;
 
-            inline GLuint id() const {return this->_id;}
-            bool isUsable() const;
-            bool isCompute() const;
+            Program & operator<<(const Source & source);
 
-            inline void operator<<(const Source & source) {this->attach(source);}
-            inline void operator()() const {if(isUsable()) use();}
+            void setUniform(const String &, GLint) const;
+            void setUniform(const String &, GLuint) const;
+            void setUniform(const String &, GLfloat) const;
+            void setUniform(const String &, GLdouble) const;
+            void setUniform(const String &, GLchar) const;
 
-            void setUniform(const std::string &, GLint) const;
-            void setUniform(const std::string &, GLuint) const;
-            void setUniform(const std::string &, GLfloat) const;
-            void setUniform(const std::string &, GLdouble) const;
-            void setUniform(const std::string &, GLchar) const;
-
-            void setUniform(const std::string &, const glm::mat4 &) const;
+            void setUniform(const String &, const glm::mat4 &) const;
 
         private:
-            GLuint _id;
-            uint8_t _attached;
-            mutable std::unordered_map<std::string, GLuint> _locations;
+            GLuint m_id;
+            mutable std::unordered_map<String, GLuint> m_locations;
     };
 }

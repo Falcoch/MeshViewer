@@ -7,15 +7,43 @@
 
 #include <utils/Log.h>
 
-namespace mv::engine {
+namespace mv::engine::shader 
+{
     Source::Source() 
-    : m_id(0), m_type(Type::NONE), m_path("") 
+    : m_id(MV_SOURCE_DEFAULT_ID), m_file() 
     {}
 
-    Source::Source(const std::filesystem::path & path, Type type) 
-    : Source() 
+    Source::Source(const Source & source)
+    : m_id(MV_SOURCE_DEFAULT_ID), m_file()
     {
-        open(path, type);
+        if(source.m_file.usable())
+            load(source.m_file);
+    }
+
+    Source::Source(Source && source)
+    : m_id(std::move(source.m_id)), m_file(std::move(source.m_file))
+    {
+        source.m_id = MV_SOURCE_DEFAULT_ID;
+    }
+
+    Source & Source::operator=(const Source & source)
+    {
+        m_id = MV_SOURCE_DEFAULT_ID;
+        m_file = {};
+
+        if(source.m_file.usable())
+            load(source.m_file);
+
+        return *this;
+    }
+
+    Source & Source::operator=(Source && source)
+    {
+        m_id = source.m_id;
+        m_file = std::move(source.m_file);
+
+        source.m_id = MV_SOURCE_DEFAULT_ID;
+        return *this;
     }
 
     Source::~Source() 
@@ -23,33 +51,43 @@ namespace mv::engine {
         glDeleteShader(m_id);
     }
 
-    const std::filesystem::path & Source::path() const 
+    bool Source::usable() const
     {
-        return m_path;
+        return m_file.usable();
     }
 
-    void Source::open(const std::filesystem::path & path, Type type)
+    GLuint Source::identifier() const
     {
-        if(m_id != 0) 
+        return m_id;
+    }
+
+    const File & Source::file() const
+    {
+        return m_file;
+    }
+
+    void Source::load(const File & file)
+    {
+        if(m_id != MV_SOURCE_DEFAULT_ID) 
             release();
 
-        if(!std::filesystem::exists(path))
-            throw std::runtime_error(std::string("Can't open : ").append(path.string()));
-
-        m_path = path;
-        std::ifstream is(path);
+        if(!file.usable())
+            throw std::runtime_error(String("Can't open : ").append(file.path().string()));
+        
+        std::ifstream is(file.path());
         if(is.fail())
             throw std::runtime_error("Stream fail.");
 
         std::stringstream buffer;
         buffer << is.rdbuf();
 
-        const char * code =  buffer.str().c_str();
+        String code = buffer.str(); // Needed since `buffer.str()` return a temporary  
+        const char * ptr = code.c_str();
 
-        m_id = glCreateShader(static_cast<GLenum>(type));
-        m_type = type;
+        m_id = glCreateShader(static_cast<GLenum>(file.type()));
+        m_file = file;
 
-        glShaderSource(m_id, 1, &code, NULL);
+        glShaderSource(m_id, 1, &ptr, NULL);
         glCompileShader(m_id);
         buffer.clear();
         
@@ -59,14 +97,23 @@ namespace mv::engine {
         if(!success) 
         {
             glGetShaderInfoLog(m_id, 512, NULL, infoLog);
-            debug::log_error("Shader Error: " + std::string(infoLog));
+            debug::log_error("Shader Error: " + String(infoLog));
         }
     }
 
     void Source::release() 
     {
+        m_file = {};
+        if(m_id == MV_SOURCE_DEFAULT_ID)
+            return;
+
         glDeleteShader(m_id);
-        m_id = 0;
-        m_type = Type::NONE;
+        m_id = MV_SOURCE_DEFAULT_ID;
+    }
+
+    Source & Source::operator<<(const File & file) 
+    {
+        load(file);
+        return *this;
     }
 }

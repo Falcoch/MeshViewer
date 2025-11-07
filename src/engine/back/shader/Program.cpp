@@ -2,167 +2,212 @@
 
 #include <iostream>
 #include <list>
+#include <exception>
 
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/mat4x4.hpp>
 
-namespace mv::engine 
+namespace mv::engine::shader 
 {
     Program::Program() 
-    : _id(0), _attached(NONE), _usable(false) 
+    : m_id(MV_PROGRAM_DEFAULT_ID)
     {
-        this->_id = glCreateProgram();
+        this->m_id = glCreateProgram();
+    }
+
+    Program::Program(Program && program)
+    : m_id(std::move(program.m_id)), m_locations(std::move(program.m_locations))
+    {
+        program.m_id = MV_PROGRAM_DEFAULT_ID;
+    }
+
+    Program & Program::operator=(Program && program)
+    {   
+        m_id = std::move(program.m_id);
+        m_locations = std::move(program.m_locations);
+
+        program.m_id = MV_PROGRAM_DEFAULT_ID;
+
+        return *this;
     }
 
     Program::~Program() 
     {
-        glDeleteProgram(this->_id);
+        if(m_id != MV_PROGRAM_DEFAULT_ID)
+            glDeleteProgram(m_id);
     }
 
-    const uint8_t Program::Categorie(const Source::Categorie categorie) 
+    GLuint Program::identifier() const
     {
-        switch (categorie) {
-            case Source::Categorie::VERTEX:
-                return 1;
+        return m_id;
+    }
 
-            case Source::Categorie::FRAGMENT:
-                return 2;
+    bool Program::linkable() const
+    {
+        GLint count;
+        glGetProgramiv(m_id, GL_ATTACHED_SHADERS, &count);
 
-            case Source::Categorie::GEOMETRY:
-                return 4;
-            
-            case Source::Categorie::TESS_CONTROL:
-                return 8;
-
-            case Source::Categorie::TESS_EVALUATION:
-                return 16;
-
-            case Source::Categorie::COMPUTE:
-                return 32;
+        GLuint * sources = new GLuint[count];
+        glGetAttachedShaders(m_id, count, NULL, sources);
         
-            default:
-                return 0;
+        bool vertex = false, fragment = false, compute = false;
+
+        for(GLint i = 0; i < count; ++i) 
+        {
+            GLint type = 0;
+            glGetShaderiv(sources[i], GL_SHADER_TYPE, &type);
+
+            switch(type)
+            {
+                case static_cast<GLint>(File::Type::Vertex):
+                    vertex = true;
+                    break;
+
+                case static_cast<GLint>(File::Type::Fragment):
+                    fragment = true;
+                    break;
+
+                case static_cast<GLint>(File::Type::Compute):
+                    compute = true;
+                    break;
+            }
         }
+
+        delete [] sources;
+
+        return ((vertex && fragment) && !compute) || (compute && (!vertex && !fragment));
+    }
+
+    bool Program::usable() const
+    {
+        GLint status = GL_FALSE;
+        glGetProgramiv(m_id, GL_LINK_STATUS, &status);
+        return status;
+    }
+
+    bool Program::isCompute() const
+    {
+        GLint count;
+        glGetProgramiv(m_id, GL_ATTACHED_SHADERS, &count);
+
+        GLuint * sources = new GLuint[count];
+        glGetAttachedShaders(m_id, count, NULL, sources);
+
+        for(GLint i = 0; i < count; ++i) 
+        {
+            GLint type = 0;
+            glGetShaderiv(sources[i], GL_SHADER_TYPE, &type);
+
+            if(type == static_cast<GLint>(File::Type::Compute))
+            {
+                delete [] sources;
+                return true;
+            }
+        }
+
+        delete [] sources;
+        return false;
     }
 
     void Program::attach(const Source & source) 
     {
-        if(source.usable()) 
-        {
-            glAttachShader(this->_id, source.id());
-            this->_attached |= Program::Categorie(source.categorie());
-        }
+        if(usable())
+            throw std::logic_error("Cannot attach source to a linked program!"); 
+
+        glAttachShader(m_id, source.identifier());
     }
 
     void Program::dettach(const Source & source)
     {
-        glDetachShader(this->_id, source.id());
-        this->_attached = this->_attached & ~Program::Categorie(source.categorie());
-        this->_usable = ((this->_attached & Bit_Categorie::VERTEX) != 0 && (this->_attached & Bit_Categorie::FRAGMENT) != 0);
+        if(usable())
+            throw std::logic_error("Cannot dettach source from a linked program!"); 
+
+        glDetachShader(m_id, source.identifier());
     }
 
-    void Program::link() 
+    void Program::release() 
     {
-        this->_usable = ((this->_attached & Bit_Categorie::VERTEX) != 0 && (this->_attached & Bit_Categorie::FRAGMENT) != 0);
-        if((this->_attached & Bit_Categorie::COMPUTE) != 0) 
+        if(m_id != MV_PROGRAM_DEFAULT_ID)
+            glDeleteProgram(m_id);
+
+        this->m_id = glCreateProgram();
+    }
+
+    void Program::link() const
+    {
+        if(linkable()) 
         {
-            if(this->_attached != Bit_Categorie::COMPUTE)
-                //TODO: Throw errors
-            
-            this->_usable = true;
-        }
-       
-        if(this->_usable) 
-        {
-            glLinkProgram(this->_id);
+            glLinkProgram(m_id);
 
             int success;
             char infoLog[512];
 
-            glGetProgramiv(this->_id, GL_LINK_STATUS, &success);
+            glGetProgramiv(m_id, GL_LINK_STATUS, &success);
             if(!success) 
             {
-                this->_usable = false;
-                glGetProgramInfoLog(this->_id, 512, NULL, infoLog);
-                throw error::shader_error(infoLog);
+                glGetProgramInfoLog(m_id, 512, NULL, infoLog);
+                throw std::runtime_error(String("Linking error: ").append(infoLog));
             }   
 
             GLint count;
-            glGetProgramiv(this->_id, GL_ACTIVE_UNIFORMS, &count);
+            glGetProgramiv(m_id, GL_ACTIVE_UNIFORMS, &count);
 
-            for(size_t i = 0; i < count; ++i) {
+            for(size_t i = 0; i < count; ++i) 
+            {
                 GLint length, size;
                 GLenum type;
                 GLchar name[64];
-                glGetActiveUniform(this->_id, static_cast<GLuint>(i), 64, &length, &size, &type, name);
+                glGetActiveUniform(m_id, static_cast<GLuint>(i), 64, &length, &size, &type, name);
                 
-                std::string var_name(name);
-                this->_locations[var_name.substr(0, var_name.find("["))] = glGetUniformLocation(this->_id, name);
+                String var_name(name);
+                m_locations[var_name.substr(0, var_name.find("["))] = glGetUniformLocation(m_id, name);
             }
         }
         else 
         {
-            if((this->_attached & Bit_Categorie::VERTEX) == 0)
-                //TODO: Throw errors
-            
-            if((this->_attached & Bit_Categorie::FRAGMENT) == 0)
-               //TODO: Throw errors
-            
+            throw std::logic_error("Cannot link program!");   
         }
     }
 
     void Program::use() const 
     {
-        if(this->_usable)
-            glUseProgram(this->_id);
+        if(usable())
+            glUseProgram(m_id);
     }
 
-    void Program::kill() 
+    Program & Program::operator<<(const Source & source)
     {
-        this->_usable = false;
-        this->_attached = Bit_Categorie::NONE;
-        this->_id = glCreateProgram();
+        attach(source);
+        return *this;
     }
-
-    bool Program::usable() const 
+  
+    void Program::setUniform(const String & name, GLint value) const 
     {
-        if(!this->_usable)
-        {
-            bool usable = ((this->_attached & Bit_Categorie::VERTEX) != 0 && (this->_attached & Bit_Categorie::FRAGMENT) != 0);
-            if(usable && (this->_attached & Bit_Categorie::COMPUTE) != 0)
-                return false;
-        }
-            
-        return this->_usable; 
+        glUniform1i(m_locations.at(name), value);
     }
 
-    void Program::setUniform(const std::string & name, GLint value) const 
+    void Program::setUniform(const String & name, GLuint value) const
     {
-        glUniform1i(this->_locations.at(name), value);
+        glUniform1ui(m_locations.at(name), value);
     }
 
-    void Program::setUniform(const std::string & name, GLuint value) const
+    void Program::setUniform(const String & name, GLfloat value) const 
     {
-        glUniform1ui(this->_locations.at(name), value);
+        glUniform1f(m_locations.at(name), value);
     }
 
-    void Program::setUniform(const std::string & name, GLfloat value) const 
+    void Program::setUniform(const String & name, GLdouble value) const 
     {
-        glUniform1f(this->_locations.at(name), value);
+        glUniform1d(m_locations.at(name), value);
     }
 
-    void Program::setUniform(const std::string & name, GLdouble value) const 
-    {
-        glUniform1d(this->_locations.at(name), value);
-    }
-
-    void Program::setUniform(const std::string & name, GLchar value) const 
+    void Program::setUniform(const String & name, GLchar value) const 
     {
         this->setUniform(name, static_cast<GLint>(value));
     }
 
-    void Program::setUniform(const std::string & name, const glm::mat4 & value) const 
+    void Program::setUniform(const String & name, const glm::mat4 & value) const 
     {
-        glUniformMatrix4fv(this->_locations.at(name), 1, GL_FALSE, &value[0][0]);
+        glUniformMatrix4fv(m_locations.at(name), 1, GL_FALSE, &value[0][0]);
     }
 }

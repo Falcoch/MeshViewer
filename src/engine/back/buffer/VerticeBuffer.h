@@ -14,12 +14,12 @@ namespace mv::engine
     {
         public:
             VerticeBuffer() = delete;
-            VerticeBuffer(const VertexArray & vao, const Layout::Array &, uint64, EditMode = EditMode::STATIC);
-            VerticeBuffer(const VertexArray & vao, const Layout::Array &, const Buffer<float> &, EditMode = EditMode::STATIC);
+            VerticeBuffer(const VertexArray & vao, const layout::Array &, uint64, EditMode = EditMode::STATIC);
+            VerticeBuffer(const VertexArray & vao, const layout::Array &, const Buffer<float> &, EditMode = EditMode::STATIC);
             VerticeBuffer(const VerticeBuffer &) = delete;
    virtual ~VerticeBuffer();
 
-            const Layout::Array & layout() const {return this->m_layout;}
+            const layout::Array & layout() const {return this->m_layout;}
 
             uint64 weight() const;
             uint64 count() const;
@@ -29,7 +29,7 @@ namespace mv::engine
             virtual void unbind() const;
             virtual void generate(const Buffer<float> &);
 
-            bool compare(const Layout::Array &) const;
+            bool compare(const layout::Array &) const;
 
             bool operator==(const VerticeBuffer &) const;
             bool operator!=(const VerticeBuffer &) const;
@@ -44,6 +44,6 @@ namespace mv::engine
             const VertexArray & m_vao;
             GLuint m_vbo;
             EditMode m_mode;
-            Layout::Array m_layout;
+            layout::Array m_layout;
     };
 }

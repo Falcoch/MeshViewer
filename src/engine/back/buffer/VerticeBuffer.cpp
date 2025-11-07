@@ -4,13 +4,13 @@
 
 namespace mv::engine 
 {
-    VerticeBuffer::VerticeBuffer(const VertexArray & vao, const Layout::Array & attributes, size_t size, EditMode mode)
+    VerticeBuffer::VerticeBuffer(const VertexArray & vao, const layout::Array & attributes, size_t size, EditMode mode)
     : GenericBuffer(size, 0), m_vao(vao), m_vbo(0), m_mode(mode), m_layout(attributes) 
     {
         this->generate({});
     } 
 
-    VerticeBuffer::VerticeBuffer(const VertexArray & vao, const Layout::Array & attributes, const std::vector<float> & vertices, EditMode mode)
+    VerticeBuffer::VerticeBuffer(const VertexArray & vao, const layout::Array & attributes, const std::vector<float> & vertices, EditMode mode)
     : GenericBuffer(vertices.size(), vertices.size()), m_vao(vao), m_vbo(0), m_mode(mode), m_layout(attributes) 
     {
         this->generate(vertices);
@@ -24,7 +24,7 @@ namespace mv::engine
 
     uint64 VerticeBuffer::weight() const 
     {
-        return Layout::weight(m_layout);
+        return layout::weight(m_layout);
     }
 
     uint64 VerticeBuffer::count() const {
@@ -76,7 +76,7 @@ namespace mv::engine
         }
     }
 
-    bool VerticeBuffer::compare(const Layout::Array & layout) const 
+    bool VerticeBuffer::compare(const layout::Array & layout) const 
     {
         return m_layout == layout;
     }
