@@ -91,7 +91,7 @@ namespace mv
         T x, y, z, w;
     };
 
-    #ifdef MV_TYPE_PREDEFINED_VEC3
+    #ifdef MV_TYPE_PREDEFINED_VEC4
         using Vec4i = Vec4<int32>;
         using Vec4f = Vec4<float>;
         using Vec4d = Vec4<double>;
