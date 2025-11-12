@@ -55,6 +55,8 @@ namespace mv
 
     typedef std::string String;
     typedef std::filesystem::path Path;
+    
+    using Byte = unsigned char;
 
     struct Size 
     {

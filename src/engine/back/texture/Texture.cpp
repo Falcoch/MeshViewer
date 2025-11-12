@@ -11,13 +11,13 @@ namespace mv::engine
         glGenTextures(1, &m_id);
     }
 
-    Texture::Texture(const TextureBuffer & buffer, GLuint type)
+    Texture::Texture(const Image & buffer, GLuint type)
     : Texture() 
     {
         load(buffer, type);
     }
 
-    Texture::Texture(TextureBuffer && buffer, GLuint type) 
+    Texture::Texture(Image && buffer, GLuint type) 
     : Texture() 
     {
         load(buffer, type);
@@ -132,7 +132,7 @@ namespace mv::engine
         glTexParameteri(texture_type, GL_TEXTURE_MAG_FILTER, state ? GL_LINEAR : GL_NEAREST);
     }
 
-    void Texture::load(GLint width, GLint height, const GLubyte * data, GLint format, GLint type) 
+    void Texture::load(GLint width, GLint height, const GLubyte * data, GLenum format, GLenum type) 
     {
         if(usable()) 
         {
@@ -148,14 +148,14 @@ namespace mv::engine
         setSmoothing(false);
     }
 
-    void Texture::load(const TextureBuffer & texture, GLint type)
+    void Texture::load(const Image & texture, GLenum type)
     {
         if(texture.data().empty()) 
         {
-            throw std::runtime_error("Cannot load texturebuffer.");
+            throw std::runtime_error("Cannot load Image.");
         }
 
-        load(texture.width(), texture.height(), texture.data().data(), texture.format(), type);
+        load(texture.width(), texture.height(), texture.data().data(), Texture::ChannelToFormat(texture.channels()), type);
     }
 
     bool Texture::usable() const 
@@ -178,5 +178,33 @@ namespace mv::engine
     void Texture::SetDisabelingByteAligment(bool state) 
     {
         glPixelStorei(GL_UNPACK_ALIGNMENT, state);
+    }
+
+    GLenum Texture::ChannelToFormat(GLuint count) 
+    {
+        switch (count)
+        {
+            case 3:
+                return GL_RGB;
+        
+            case 4:
+                return GL_RGBA;
+        }
+
+        throw std::runtime_error("Unsupported channels count");
+    }
+
+    GLuint Texture::FormatToChannel(GLenum format)
+    {
+        switch (format)
+        {
+            case GL_RGB:
+                return 3;
+        
+            case GL_RGBA:
+                return 4;
+        }
+
+        throw std::runtime_error("Unsupported GLenum color format");
     }
 }

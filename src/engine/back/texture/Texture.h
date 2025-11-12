@@ -3,7 +3,7 @@
 #include <GL/glew.h>
 #include <compare>
 
-#include "TextureBuffer.h"
+#include <utils/Image.h>
 
 #define MV_TEXTURE_DEFAULT_ID 0
 #define MV_TEXTURE_DEFAULT_SLOT 0
@@ -14,8 +14,8 @@ namespace mv::engine
     {
         public:
             Texture();
-            Texture(const TextureBuffer &, GLuint = GL_TEXTURE_2D);
-            Texture(TextureBuffer &&, GLuint = GL_TEXTURE_2D);
+            Texture(const Image &, GLuint = GL_TEXTURE_2D);
+            Texture(Image &&, GLuint = GL_TEXTURE_2D);
             Texture(const Texture &);
             Texture(Texture &&);
             Texture & operator=(const Texture &);
@@ -58,7 +58,7 @@ namespace mv::engine
             void setWraping(Wraping, Axis = static_cast<Axis>(S | T));
             void setSmoothing(bool);
 
-            void load(const TextureBuffer &, GLint);
+            void load(const Image &, GLenum);
             
             bool usable() const;
 
@@ -67,7 +67,10 @@ namespace mv::engine
             static void SetDisabelingByteAligment(bool);
 
         protected:
-            void load(GLint, GLint, const GLubyte *, GLint, GLint);
+            void load(GLint, GLint, const GLubyte *, GLenum, GLenum);
+
+            static GLenum ChannelToFormat(GLuint);
+            static GLuint FormatToChannel(GLenum); 
 
         private:
             GLuint m_id;

@@ -56,7 +56,6 @@ set(_header
     src/engine/back/shader/Source.h
     src/engine/back/shader/File.h
     src/engine/back/texture/Texture.h
-    src/engine/back/texture/TextureBuffer.h
 
     src/gui/global/Window.h
 
@@ -68,6 +67,7 @@ set(_header
     src/utils/Std.h
     src/utils/Time.h
     src/utils/Type.h
+    src/utils/Image.h
 )
 
 set(_source
@@ -84,7 +84,6 @@ set(_source
     src/engine/back/shader/Source.cpp
     src/engine/back/shader/File.cpp
     src/engine/back/texture/Texture.cpp
-    src/engine/back/texture/TextureBuffer.cpp
 
     src/gui/global/Window.cpp
 
@@ -93,6 +92,7 @@ set(_source
     src/utils/Log.cpp
     src/utils/Macro.cpp
     src/utils/Time.cpp
+    src/utils/Image.cpp
 )
 
 target_sources(${TARGET} PRIVATE ${_header} ${_source})
