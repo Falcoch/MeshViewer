@@ -55,6 +55,8 @@ set(_header
     src/engine/back/shader/Program.h
     src/engine/back/shader/Source.h
     src/engine/back/shader/File.h
+    src/engine/back/texture/Texture.h
+    src/engine/back/texture/TextureBuffer.h
 
     src/gui/global/Window.h
 
@@ -81,6 +83,8 @@ set(_source
     src/engine/back/shader/Program.cpp
     src/engine/back/shader/Source.cpp
     src/engine/back/shader/File.cpp
+    src/engine/back/texture/Texture.cpp
+    src/engine/back/texture/TextureBuffer.cpp
 
     src/gui/global/Window.cpp
 

@@ -11,6 +11,7 @@
 
 #include "engine/back/buffer/VerticeBuffer.h"
 #include "engine/back/shader/Program.h"
+#include "engine/back/texture/Texture.h"
 
 int main(int, char **)
 {
@@ -27,14 +28,22 @@ int main(int, char **)
         mv::engine::VertexArray vao;
         vao.bind();
 
-        mv::engine::VerticeBuffer vbo(vao, {{mv::engine::layout::Value::XYZ, mv::engine::layout::defaults::Weight::XYZ}}, 255);
+        mv::engine::VerticeBuffer vbo(vao, {
+            {mv::engine::layout::Value::XYZ, mv::engine::layout::defaults::Weight::XYZ},
+            {mv::engine::layout::Value::UV,  mv::engine::layout::defaults::Weight::UV}
+        
+        }, 255);
         vbo.bind();
 
         vbo.set(
             {
-                -0.5f, -0.5f, 0.0f, 
-                 0.5f, -0.5f, 0.0f,
-                -0.5f,  0.5f, 0.0f
+                -0.5f, -0.5f, 0.0f,     0.f, 1.f,
+                 0.5f, -0.5f, 0.0f,     1.f, 1.f,
+                -0.5f,  0.5f, 0.0f,     0.f, 0.f,
+
+                 0.5f, -0.5f, 0.0f,     1.f, 1.f,
+                 0.5f,  0.5f, 0.0f,     1.f, 0.f,
+                -0.5f,  0.5f, 0.0f,     0.f, 0.f
             }
         );
 
@@ -42,12 +51,12 @@ int main(int, char **)
         mv::debug::log_info("Loading vertex shader");
 
         mv::engine::shader::Source vertex;
-        vertex << mv::engine::shader::File(mv::engine::shader::File::Type::Vertex, "./src/shader/basic/Basic.vert");
+        vertex << mv::engine::shader::File(mv::engine::shader::File::Type::Vertex, "./src/shader/basic/Texture.vert");
 
         mv::debug::log_info("Loading fragment shader");
 
         mv::engine::shader::Source fragment;
-        fragment << mv::engine::shader::File(mv::engine::shader::File::Type::Fragment, "./src/shader/basic/Basic.frag");
+        fragment << mv::engine::shader::File(mv::engine::shader::File::Type::Fragment, "./src/shader/basic/Texture.frag");
 
         mv::debug::log_info("Attaching shaders");
         mv::engine::shader::Program program;
@@ -57,12 +66,22 @@ int main(int, char **)
         mv::debug::log_info("Linking program");
         program.link();
 
+        mv::debug::log_info("Loading texture");
+        mv::engine::TextureBuffer texture_buffer;
+        texture_buffer.load("./assets/texture/test/HelloThere.png");
+
+        mv::engine::Texture texture(texture_buffer, GL_TEXTURE_2D);
+        texture.bind(0);
+
         mv::debug::log_info("Loop begin");
         while(window.isOpen())
         {
             window.pollevents();
             program.use();
-            glDrawArrays(GL_TRIANGLES, 0, 3);
+            program.setUniform("uSlot", 0);
+
+
+            glDrawArrays(GL_TRIANGLES, 0, 6);
             window.swapbuffers();
         }
         mv::debug::log_info("Loop end");
