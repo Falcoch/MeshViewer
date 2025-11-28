@@ -29,7 +29,7 @@ namespace mv
             void flipVerticaly();
 
             void load(const Path &);
-            void load(const Byte *, size_t);
+            void load(uint32, uint32, uint32, const Byte *);
             void release();
 
             Byte operator[](size_t) const;

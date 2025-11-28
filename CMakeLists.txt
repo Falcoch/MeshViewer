@@ -56,6 +56,8 @@ set(_header
     src/engine/back/shader/Source.h
     src/engine/back/shader/File.h
     src/engine/back/texture/Texture.h
+    src/engine/back/camera/Camera.h
+    src/engine/back/camera/FreeCamera.h
 
     src/gui/global/Window.h
 
@@ -84,6 +86,7 @@ set(_source
     src/engine/back/shader/Source.cpp
     src/engine/back/shader/File.cpp
     src/engine/back/texture/Texture.cpp
+    src/engine/back/camera/FreeCamera.cpp
 
     src/gui/global/Window.cpp
 

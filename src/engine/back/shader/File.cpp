@@ -3,7 +3,7 @@
 namespace mv::engine::shader
 {
     File::File()
-    : m_type(Type::None), m_path("")
+    : m_path(""), m_type(Type::None)
     {}
 
     File::File(Type type, const Path & path)

@@ -9,8 +9,9 @@ namespace mv
     class Color 
     {
         public:
-            Color(uint8 = 255);
-            Color(uint8, uint8, uint8, uint8 = 255);
+            explicit Color(uint8 = 255);
+            explicit Color(uint8, uint8, uint8, uint8 = 255);
+            
             Color(const glm::vec4 &);
             Color(const std::string &);
 

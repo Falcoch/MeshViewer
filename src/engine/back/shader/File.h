@@ -35,7 +35,7 @@ namespace mv::engine::shader
             void setPath(const Path &);
 
         private:
-            Type m_type;
             Path m_path;
+            Type m_type;
     };
 }

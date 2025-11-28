@@ -54,6 +54,19 @@ namespace mv::gui
         return !glfwWindowShouldClose(m_window);
     }
 
+    void Window::changeIcon(const Image & image)
+    {
+        if(m_window == nullptr)
+            return;
+
+        GLFWimage icon;
+        icon.width  = image.width();
+        icon.height = image.height();
+        icon.pixels = const_cast<Byte *>(image.data().data());
+
+        glfwSetWindowIcon(m_window, 1, &icon);
+    }
+
     void Window::open(const String & title, const Size & dimension)
     {
         if(m_window != nullptr)

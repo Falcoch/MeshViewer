@@ -1,8 +1,10 @@
 #pragma once
 
+#include <utils/Image.h> //? gl.h included before glew.h
 #include <GLFW/glfw3.h>
 
 #include <utils/Type.h>
+
 
 namespace mv::gui
 {
@@ -17,6 +19,8 @@ namespace mv::gui
             Size size() const;
 
             bool isOpen() const;
+
+            void changeIcon(const Image &);
 
             void open(const String &, const Size & = {0, 0});
             void close();

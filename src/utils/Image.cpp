@@ -70,18 +70,16 @@ namespace mv
         if(data == NULL) 
             throw std::runtime_error("File \"" + path.string() + "\" is NULL!");
 
-        m_width    = width;
-        m_height   = height;
-        m_channels = nrChannels;
-
-        load(data, width * height * nrChannels);
-
+        load(width, height, nrChannels, data);
         stbi_image_free(data);
     }
 
-    void Image::load(const Byte * data, size_t size)
+    void Image::load(uint32 w, uint32 h, uint32 c, const Byte * data)
     {
-        m_data = std::vector<Byte>(data, data + size);
+        m_width = w;
+        m_height = h;
+        m_channels = c;
+        m_data = std::vector<Byte>(data, data + (w * h * c));
     }
 
     void Image::release() 
